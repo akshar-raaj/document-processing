@@ -2,3 +2,4 @@ fastapi[standard]
 ipython
 python-magic
 pikepdf
+pdfminer.six
