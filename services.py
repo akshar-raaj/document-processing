@@ -59,7 +59,7 @@ def merge_pdfs(attachments: List[UploadFile]) -> str:
     return merged_filename
 
 
-def save_pdf(file, path):
+def save_file(file, path):
     # Open in binary mode
     # We aren't doing raw I/O, as we haven't disabled buffering.
     # By default Python operates in buffered mode.
