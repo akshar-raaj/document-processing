@@ -49,11 +49,14 @@ def pdfs_merge(attachments: List[UploadFile]):
     return {"status": "processed", "filename": merged_filename}
 
 
-@app.post("/extract-text")
+@app.post("/extract-pdf-text")
 def extract_text(attachment: UploadFile):
     """
     Extracts text from an attachment uploaded through multipart/form-data.
     """
+    type_details = identify_file_type(attachment.file)
+    if type_details.mime_type != 'application/pdf':
+        raise HTTPException(status_code=400, detail="A non-pdf file found.")
     attachment_name = attachment.filename
     output_filename = f"/media/extraction-pdfs/{attachment_name}"
     save_pdf(attachment.file, output_filename)
@@ -63,13 +66,16 @@ def extract_text(attachment: UploadFile):
     return {"status": content}
 
 
-@app.post("/ocr")
-def ocr(attachment: UploadFile):
+@app.post("/extract-image-text")
+def extract_img_text(attachment: UploadFile):
     """
     Perform OCR on the uploaded attachment.
     Currently works with images having text.
     Later add support for PDFs and Docx as well.
     """
+    type_details = identify_file_type(attachment.file)
+    if not type_details.mime_type.startswith('image'):
+        raise HTTPException(status_code=400, detail="A non image file found.")
     file_size = get_file_size(attachment.file)
     # 100 MB
     if file_size > (10 * 1024 * 1024):
