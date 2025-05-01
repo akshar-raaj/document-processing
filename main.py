@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 
-from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text
+from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text, extract_pdf_text_all
 
 
 app = FastAPI()
@@ -96,3 +96,37 @@ def extract_img_text(attachment: UploadFile):
     if is_success is False:
         raise HTTPException(status_code=400, detail=content)
     return {"content": content}
+
+
+@app.post("/ocr")
+def ocr(attachment: UploadFile):
+    """
+    It could pass a PDF or an image.
+    A PDF could be searchable or non-searchable.
+
+    Image Case:
+    We can run the image file through tesseract and extract the text.
+
+    PDF Case:
+    Searchable: We can use pdfminer.six as being used.
+    Non-Searchable: Covert the PDF to an image and then extract the text
+
+    In all of the above cases, the text should be extracted and returned from here.
+    """
+    type_details = identify_file_type(attachment.file)
+    if not type_details.mime_type.startswith('image') and not type_details.mime_type.startswith('application/pdf'):
+        raise HTTPException(status_code=400, detail="Provide either an image or a PDF")
+    # 1. Save the attachment, for later auditing
+    output_filename = f"/media/ocr-files/{attachment.filename}"
+    save_file(attachment.file, output_filename)
+    attachment.file.seek(0)
+    # Check the content-type, if image, then extract text using Tesseract.
+    if type_details.mime_type.startswith('image'):
+        is_success, content = extract_image_text(output_filename)
+    elif type_details.mime_type.startswith('application/pdf'):
+        # Attempt extracting text using pdfminer.six, assuming it's a searchable PDF
+        is_success, content = extract_pdf_text_all(file_path=output_filename)
+    if is_success is True:
+        return content
+    else:
+        raise HTTPException(400, detail=content)

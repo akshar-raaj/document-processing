@@ -1,3 +1,5 @@
+import os
+import glob
 from typing import List, BinaryIO
 
 import magic
@@ -10,6 +12,8 @@ from pdfminer.pdfparser import PDFSyntaxError
 
 import pytesseract
 from pytesseract.pytesseract import TesseractError
+
+from pdf2image import convert_from_path
 
 from fastapi import UploadFile
 
@@ -72,10 +76,9 @@ def save_file(file, path):
             break
         out_file.write(chunk)
     out_file.close()
-    print("Saved PDF")
 
 
-def extract_pdf_text(file):
+def extract_pdf_text(file=None):
     """
     Extracts text from a PDF containing embedded text using pdfminer.six library.
 
@@ -86,6 +89,36 @@ def extract_pdf_text(file):
         return True, text
     except PDFSyntaxError:
         return False, "An invalid or corrupted PDF"
+
+
+def extract_pdf_text_all(file_path):
+    """
+    Attempts extraction for both searchable and non-searchable PDFs.
+
+    1. For searchable_pdfs, delegate to extract_pdf_text which uses pdfminer.six
+    2. For non-searchable PDFs, convert to an image and then extract text
+    """
+    f = open(file_path, "rb")
+    is_success, content = extract_pdf_text(f)
+    f.close()
+    if is_success is False:
+        # It's not even a PDF probably
+        return False, content
+    if len(content) > 10:
+        return True, content
+    # Probably it's a non-searchable PDF
+    # Convert it to an image first
+    output_folder = os.path.dirname(file_path)
+    basename = os.path.basename(file_path)
+    if '.pdf' in basename:
+        basename = basename.replace('.pdf', '')
+    convert_from_path(file_path, output_folder=output_folder, fmt="png", output_file=basename)
+    # The converted images have been saved now.
+    converted_images_paths = sorted(glob.glob(f"{output_folder}/{basename}*.png"))
+    # Just consider the first image for now.
+    # We will extend it for all images later.
+    is_success, content = extract_image_text(converted_images_paths[0])
+    return is_success, content
 
 
 def get_file_size(file):

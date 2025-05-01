@@ -4,3 +4,4 @@ python-magic
 pikepdf
 pdfminer.six
 pytesseract
+pdf2image
