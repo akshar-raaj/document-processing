@@ -1,6 +1,7 @@
 import magic
 
 from pikepdf import Pdf
+from pdfminer.high_level import extract_text
 
 
 def identify_file_type(file_object_or_stream):
@@ -45,3 +46,24 @@ def merge_pdfs(attachments):
     merged_pdf.save(f"/media/merged-pdfs/{merged_filename}")
     merged_pdf.close()
     return merged_filename
+
+
+async def save_pdf(attachment, path):
+    # Open in binary mode
+    # We aren't doing raw I/O, as we haven't disabled buffering.
+    # By default Python operates in buffered mode.
+    chunk_size = 1024 * 1024   # 1 MB
+    file = open(path, "wb")
+    while True:
+        # Reading will be performed in buffered mode.
+        chunk = await attachment.read(chunk_size)
+        if not chunk:
+            break
+        file.write(chunk)
+    file.close()
+    print("Saved PDF")
+
+
+def extract_pdf_text(attachment):
+    text = extract_text(attachment)
+    return text

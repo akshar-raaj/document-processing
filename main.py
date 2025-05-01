@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 
-from services import identify_file_type, merge_pdfs
+from services import identify_file_type, merge_pdfs, save_pdf, extract_pdf_text
 
 
 app = FastAPI()
@@ -47,3 +47,15 @@ def pdfs_merge(attachments: List[UploadFile]):
     # Validation passed
     merged_filename = merge_pdfs(attachments)
     return {"status": "processed", "filename": merged_filename}
+
+
+@app.post("/extract-text")
+async def extract_text(attachment: UploadFile):
+    """
+    Extracts text from an attachment uploaded through multipart/form-data.
+    """
+    attachment_name = attachment.filename
+    output_filename = f"/media/extraction-pdfs/{attachment_name}"
+    await save_pdf(attachment, output_filename)
+    content = extract_pdf_text(attachment.file)
+    return {"status": content}
