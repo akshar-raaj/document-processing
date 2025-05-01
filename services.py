@@ -65,5 +65,10 @@ async def save_pdf(attachment, path):
 
 
 def extract_pdf_text(attachment):
+    """
+    Extracts text from a PDF containing embedded text using pdfminer.six library.
+
+    It wouldn't be able to extract text from PDFs which don't have embedded text i.e in scanned PDFs or PDFs having images of text.
+    """
     text = extract_text(attachment)
     return text
