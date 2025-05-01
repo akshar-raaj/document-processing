@@ -50,13 +50,13 @@ def pdfs_merge(attachments: List[UploadFile]):
 
 
 @app.post("/extract-text")
-async def extract_text(attachment: UploadFile):
+def extract_text(attachment: UploadFile):
     """
     Extracts text from an attachment uploaded through multipart/form-data.
     """
     attachment_name = attachment.filename
     output_filename = f"/media/extraction-pdfs/{attachment_name}"
-    await save_pdf(attachment, output_filename)
+    save_pdf(attachment.file, output_filename)
     is_success, content = extract_pdf_text(attachment.file)
     if is_success is False:
         raise HTTPException(status_code=400, detail=content)
@@ -64,7 +64,7 @@ async def extract_text(attachment: UploadFile):
 
 
 @app.post("/ocr")
-async def ocr(attachment: UploadFile):
+def ocr(attachment: UploadFile):
     """
     Perform OCR on the uploaded attachment.
     Currently works with images having text.
@@ -75,7 +75,7 @@ async def ocr(attachment: UploadFile):
     if file_size > (10 * 1024 * 1024):
         raise HTTPException(status_code=400, detail="Only supports upto 10MB files.")
     output_filename = f"/media/ocr-images/{attachment.filename}"
-    await save_pdf(attachment, output_filename)
+    save_pdf(attachment.file, output_filename)
     is_success, content = extract_image_text(output_filename)
     if is_success is False:
         raise HTTPException(status_code=400, detail=content)

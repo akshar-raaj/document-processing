@@ -1,4 +1,7 @@
+from typing import List, BinaryIO
+
 import magic
+from magic.compat import FileMagic
 
 from pikepdf import Pdf
 
@@ -8,8 +11,10 @@ from pdfminer.pdfparser import PDFSyntaxError
 import pytesseract
 from pytesseract.pytesseract import TesseractError
 
+from fastapi import UploadFile
 
-def identify_file_type(file_object_or_stream):
+
+def identify_file_type(file_object_or_stream: BinaryIO) -> FileMagic:
     """
     Identifies the file's MIME type using magic.
     It's a Python interface to libmagic library. It behaves similar to
@@ -29,12 +34,13 @@ def identify_file_type(file_object_or_stream):
     return result
 
 
-def merge_pdfs(attachments):
+def merge_pdfs(attachments: List[UploadFile]) -> str:
     """
     Merges multiple PDFs using pikepdf.
     pikepdf is a Python binding that interfaces with qpdf. qpdf allows reading, manipulating and creating pdfs.
 
     A list of `UploadFile` is passed as attachments.
+    We considered passing File instances. UploadFile.file is possible however FastAPI UploadFile.file lacks a filename. Hence we decided on passing the `UploadFile` itself.
     """
     merged_pdf = Pdf.new()
     filenames = []
@@ -53,30 +59,30 @@ def merge_pdfs(attachments):
     return merged_filename
 
 
-async def save_pdf(attachment, path):
+def save_pdf(file, path):
     # Open in binary mode
     # We aren't doing raw I/O, as we haven't disabled buffering.
     # By default Python operates in buffered mode.
     chunk_size = 1024 * 1024   # 1 MB
-    file = open(path, "wb")
+    out_file = open(path, "wb")
     while True:
         # Reading will be performed in buffered mode.
-        chunk = await attachment.read(chunk_size)
+        chunk = file.read(chunk_size)
         if not chunk:
             break
-        file.write(chunk)
-    file.close()
+        out_file.write(chunk)
+    out_file.close()
     print("Saved PDF")
 
 
-def extract_pdf_text(attachment):
+def extract_pdf_text(file):
     """
     Extracts text from a PDF containing embedded text using pdfminer.six library.
 
     It wouldn't be able to extract text from PDFs which don't have embedded text i.e in scanned PDFs or PDFs having images of text.
     """
     try:
-        text = extract_text(attachment)
+        text = extract_text(file)
         return True, text
     except PDFSyntaxError:
         return False, "An invalid or corrupted PDF"
