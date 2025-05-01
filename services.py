@@ -1,7 +1,12 @@
 import magic
 
 from pikepdf import Pdf
+
 from pdfminer.high_level import extract_text
+from pdfminer.pdfparser import PDFSyntaxError
+
+import pytesseract
+from pytesseract.pytesseract import TesseractError
 
 
 def identify_file_type(file_object_or_stream):
@@ -70,5 +75,23 @@ def extract_pdf_text(attachment):
 
     It wouldn't be able to extract text from PDFs which don't have embedded text i.e in scanned PDFs or PDFs having images of text.
     """
-    text = extract_text(attachment)
-    return text
+    try:
+        text = extract_text(attachment)
+        return True, text
+    except PDFSyntaxError:
+        return False, "An invalid or corrupted PDF"
+
+
+def get_file_size(file):
+    file.seek(0, 2)   # Move to the end of file
+    size = file.tell()
+    file.seek(0)   # Reset back to beginning
+    return size
+
+
+def extract_image_text(file_path: str):
+    try:
+        text = pytesseract.image_to_string(file_path)
+        return True, text
+    except TesseractError:
+        return False, "An invalid or corrupted image"

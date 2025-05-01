@@ -3,3 +3,4 @@ ipython
 python-magic
 pikepdf
 pdfminer.six
+pytesseract

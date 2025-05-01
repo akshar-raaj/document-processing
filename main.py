@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 
-from services import identify_file_type, merge_pdfs, save_pdf, extract_pdf_text
+from services import identify_file_type, merge_pdfs, save_pdf, extract_pdf_text, get_file_size, extract_image_text
 
 
 app = FastAPI()
@@ -57,5 +57,26 @@ async def extract_text(attachment: UploadFile):
     attachment_name = attachment.filename
     output_filename = f"/media/extraction-pdfs/{attachment_name}"
     await save_pdf(attachment, output_filename)
-    content = extract_pdf_text(attachment.file)
+    is_success, content = extract_pdf_text(attachment.file)
+    if is_success is False:
+        raise HTTPException(status_code=400, detail=content)
     return {"status": content}
+
+
+@app.post("/ocr")
+async def ocr(attachment: UploadFile):
+    """
+    Perform OCR on the uploaded attachment.
+    Currently works with images having text.
+    Later add support for PDFs and Docx as well.
+    """
+    file_size = get_file_size(attachment.file)
+    # 100 MB
+    if file_size > (10 * 1024 * 1024):
+        raise HTTPException(status_code=400, detail="Only supports upto 10MB files.")
+    output_filename = f"/media/ocr-images/{attachment.filename}"
+    await save_pdf(attachment, output_filename)
+    is_success, content = extract_image_text(output_filename)
+    if is_success is False:
+        raise HTTPException(status_code=400, detail=content)
+    return {"content": content}
