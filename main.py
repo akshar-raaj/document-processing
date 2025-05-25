@@ -7,6 +7,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text, extract_pdf_text_all
+from services import text_analysis
 
 
 app = FastAPI()
@@ -82,7 +83,8 @@ def extract_text(attachment: UploadFile):
     is_success, content = extract_pdf_text(attachment.file)
     if is_success is False:
         raise HTTPException(status_code=400, detail=content)
-    return {"status": content}
+    analysis_result = text_analysis(content)
+    return {"content": content, "analysis_result": analysis_result}
 
 
 @app.post("/extract-image-text")

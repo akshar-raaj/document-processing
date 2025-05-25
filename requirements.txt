@@ -5,3 +5,4 @@ pikepdf             # Based on qpdf, a PDF manipulation library
 pdfminer.six        # Extract text from searchable PDFs
 pytesseract         # Extract text from non searchable PDFs
 pdf2image
+nltk                # natural language toolkit. Used for text analysis

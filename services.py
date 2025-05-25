@@ -1,6 +1,7 @@
 import os
 import glob
 import logging
+import nltk
 from typing import List, BinaryIO
 
 import magic
@@ -20,6 +21,10 @@ from fastapi import UploadFile
 
 
 logger = logging.getLogger(__name__)
+
+
+# It's an idempotent operatation
+nltk.download('stopwords')
 
 
 def identify_file_type(file_object_or_stream: BinaryIO) -> FileMagic:
@@ -145,3 +150,24 @@ def extract_image_text(file_path: str):
         return True, text
     except TesseractError:
         return False, "An invalid or corrupted image"
+
+
+def text_analysis(text: str):
+    """
+    Performs analysis on text using nltk.
+    Currently does the following:
+    - Length of the text
+    - Most common words
+    - Unique words
+    - Collocations
+    """
+    words = text.split(" ")
+    # Remove stopwords
+    words = [word for word in words if word not in nltk.corpus.stopwords.words("english")]
+    uniques = set(words)
+    text = nltk.Text(words)
+    freq_dist = nltk.FreqDist(text)
+    length = len(text)
+    most_common = freq_dist.most_common(10)
+    collocations = text.collocations()
+    return {"length": length, "most_common": most_common, "uniques": uniques, "collocations": collocations}
