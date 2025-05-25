@@ -4,6 +4,7 @@ from typing import List
 from fastapi import FastAPI
 from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text, extract_pdf_text_all
 
@@ -12,6 +13,15 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
+# Allow CORS for your frontend origin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8000"],  # Frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -29,7 +39,6 @@ def identify_content_type(attachment: UploadFile):
     # We must seek(0), and go to the beginning before trying to identify the file type.
     attachment.file.seek(0)
     file_type = identify_file_type(attachment.file)
-    # We are not persisting this file on the server
     return {"content-type": file_type.mime_type}
 
 
