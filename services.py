@@ -88,8 +88,9 @@ def save_file(file: BinaryIO, path: str):
     logger.info(f"Saved file to {path}")
 
 
-def extract_pdf_text(file=None):
+def extract_pdf_text(file: BinaryIO = None):
     """
+    :param: A file like object, opened in binary mode.
     Extracts text from a PDF containing embedded text using pdfminer.six library.
 
     It wouldn't be able to extract text from PDFs which don't have embedded text i.e in scanned PDFs or PDFs having images of text.
