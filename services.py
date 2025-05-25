@@ -93,7 +93,7 @@ def save_file(file: BinaryIO, path: str):
     logger.info(f"Saved file to {path}")
 
 
-def extract_pdf_text(file: BinaryIO = None):
+def extract_pdf_text(file: BinaryIO):
     """
     :param: A file like object, opened in binary mode.
     Extracts text from a PDF containing embedded text using pdfminer.six library.
@@ -122,7 +122,7 @@ def extract_pdf_text_all(file_path):
         return False, content
     if len(content) > 10:
         return True, content
-    # Probably it's a non-searchable PDF
+    # Probably it's a non-searchable PDF, that's why we were able to get less than 10 characters.
     # Convert it to an image first
     output_folder = os.path.dirname(file_path)
     basename = os.path.basename(file_path)
@@ -145,6 +145,10 @@ def get_file_size(file):
 
 
 def extract_image_text(file_path: str):
+    """
+    Expects an image file to be passed.
+    A TesseractError would happen, and will be handled, if the file is non-image.
+    """
     try:
         text = pytesseract.image_to_string(file_path)
         return True, text

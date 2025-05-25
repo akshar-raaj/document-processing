@@ -113,6 +113,7 @@ def extract_img_text(attachment: UploadFile):
 @app.post("/ocr")
 def ocr(attachment: UploadFile):
     """
+    TODO: Support multiple attachments
     It could pass a PDF or an image.
     A PDF could be searchable or non-searchable.
 
@@ -136,7 +137,7 @@ def ocr(attachment: UploadFile):
     if type_details.mime_type.startswith('image'):
         is_success, content = extract_image_text(output_filename)
     elif type_details.mime_type.startswith('application/pdf'):
-        # Attempt extracting text using pdfminer.six, assuming it's a searchable PDF
+        # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
         is_success, content = extract_pdf_text_all(file_path=output_filename)
     if is_success is True:
         return content
