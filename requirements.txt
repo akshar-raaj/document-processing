@@ -1,7 +1,7 @@
-fastapi[standard]
+fastapi[standard]   # Modern and performant API Framework
 ipython
-python-magic
-pikepdf
-pdfminer.six
-pytesseract
+python-magic        # Detect and identify the file's mime types
+pikepdf             # Based on qpdf, a PDF manipulation library
+pdfminer.six        # Extract text from searchable PDFs
+pytesseract         # Extract text from non searchable PDFs
 pdf2image

@@ -60,6 +60,7 @@ def pdfs_merge(attachments: List[UploadFile]):
         file_type = identify_file_type(attachment.file)
         mime_type = file_type.mime_type
         if file_type.mime_type != 'application/pdf':
+            logger.info(f"Validation on {filename} failed.")
             raise HTTPException(status_code=400, detail=f"A {mime_type} file posted.")
     # Validation passed
     merged_filename = merge_pdfs(attachments)

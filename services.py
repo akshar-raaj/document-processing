@@ -1,5 +1,6 @@
 import os
 import glob
+import logging
 from typing import List, BinaryIO
 
 import magic
@@ -16,6 +17,9 @@ from pytesseract.pytesseract import TesseractError
 from pdf2image import convert_from_path
 
 from fastapi import UploadFile
+
+
+logger = logging.getLogger(__name__)
 
 
 def identify_file_type(file_object_or_stream: BinaryIO) -> FileMagic:
@@ -47,26 +51,31 @@ def merge_pdfs(attachments: List[UploadFile]) -> str:
     We considered passing File instances. UploadFile.file is possible however FastAPI UploadFile.file lacks a filename. Hence we decided on passing the `UploadFile` itself.
     """
     merged_pdf = Pdf.new()
+    logger.info("Created a new PDF")
     filenames = []
     for attachment in attachments:
         stream = attachment.file
+        original_filename = attachment.filename
         filename = attachment.filename
         if '.pdf' in filename:
             filename = filename.replace('.pdf', '')
         filenames.append(filename)
         pdf = Pdf.open(stream)
         merged_pdf.pages.extend(pdf.pages)
+        logger.info(f"Merged {original_filename}")
     merged_filename = "-".join(filenames)
     merged_filename = f"{merged_filename}.pdf"
     merged_pdf.save(f"/media/merged-pdfs/{merged_filename}")
     merged_pdf.close()
+    logger.info("Merged PDF saved")
     return merged_filename
 
 
-def save_file(file, path):
+def save_file(file: BinaryIO, path: str):
     # Open in binary mode
     # We aren't doing raw I/O, as we haven't disabled buffering.
     # By default Python operates in buffered mode.
+    logger.info(f"Saving file to {path}")
     chunk_size = 1024 * 1024   # 1 MB
     out_file = open(path, "wb")
     while True:
@@ -76,6 +85,7 @@ def save_file(file, path):
             break
         out_file.write(chunk)
     out_file.close()
+    logger.info(f"Saved file to {path}")
 
 
 def extract_pdf_text(file=None):
