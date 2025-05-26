@@ -3,6 +3,6 @@ ipython
 python-magic        # Detect and identify the file's mime types
 pikepdf             # Based on qpdf, a PDF manipulation library
 pdfminer.six        # Extract text from searchable PDFs
-pytesseract         # Extract text from non searchable PDFs
-pdf2image
+pytesseract         # Extract text from images
+pdf2image           # Convert non-searchable PDF pages to images, provides convert_from_path. Needs Poppler
 nltk                # natural language toolkit. Used for text analysis

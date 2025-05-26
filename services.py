@@ -97,6 +97,7 @@ def extract_pdf_text(file: BinaryIO):
     """
     :param: A file like object, opened in binary mode.
     Extracts text from a PDF containing embedded text using pdfminer.six library.
+    It also works for scanned PDFs having images of text, as long as the PDF is searchable, i.e contains hidden embedded text.
 
     It wouldn't be able to extract text from PDFs which don't have embedded text i.e in scanned PDFs or PDFs having images of text.
     """
@@ -107,7 +108,7 @@ def extract_pdf_text(file: BinaryIO):
         return False, "An invalid or corrupted PDF"
 
 
-def extract_pdf_text_all(file_path):
+def extract_pdf_text_all(file_path: str):
     """
     Attempts extraction for both searchable and non-searchable PDFs.
 
@@ -124,8 +125,8 @@ def extract_pdf_text_all(file_path):
         return True, content
     # Probably it's a non-searchable PDF, that's why we were able to get less than 10 characters.
     # Convert it to an image first
-    output_folder = os.path.dirname(file_path)
-    basename = os.path.basename(file_path)
+    output_folder = "/media/pdf-to-image"   # Directory name -> /media/pdf-to-image
+    basename = os.path.basename(file_path)       # File name -> sample.pdf
     if '.pdf' in basename:
         basename = basename.replace('.pdf', '')
     convert_from_path(file_path, output_folder=output_folder, fmt="png", output_file=basename)
@@ -133,8 +134,15 @@ def extract_pdf_text_all(file_path):
     converted_images_paths = sorted(glob.glob(f"{output_folder}/{basename}*.png"))
     # Just consider the first image for now.
     # We will extend it for all images later.
-    is_success, content = extract_image_text(converted_images_paths[0])
-    return is_success, content
+    is_successes = []
+    contents = []
+    for converted_image_path in converted_images_paths:
+        is_success, content = extract_image_text(converted_image_path)
+        if is_success is False:
+            logger.info(f"Failed to extract text from {converted_image_path}")
+        is_successes.append(is_success)
+        contents.append(content)
+    return any(is_successes), "\n".join(contents)
 
 
 def get_file_size(file):
@@ -146,7 +154,7 @@ def get_file_size(file):
 
 def extract_image_text(file_path: str):
     """
-    Expects an image file to be passed.
+    Expects an image file path to be passed.
     A TesseractError would happen, and will be handled, if the file is non-image.
     """
     try:
