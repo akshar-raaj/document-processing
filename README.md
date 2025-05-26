@@ -8,7 +8,7 @@ This project performs the following broad functionalities:
 
 It exposes an API endpoint `/ocr` that takes a PDF or an image as an input. It then performs OCR if needed on the input, extracts text out of the input, and outputs the extracted text.
 
-`/ocr` performs OCR using Tesseract. Another API endpoint `textract-ocr` performs OCR using **AWS Textract**. AWS Textract provides better accuracy on low quality images, skewed images and images of handwritten text.
+`/ocr` performs OCR using Tesseract. Another API endpoint `/textract-ocr` performs OCR using **AWS Textract**. AWS Textract provides better accuracy on low quality images, skewed images and images of handwritten text.
 
 An interactive API documentation is available at `/docs`. This API documentation is generated from an OpenAPI schema.
 
@@ -43,8 +43,8 @@ It allows extracting text from searchable PDFs. In such cases on OCR is needed.
 Provides Python interfaces to AWS Services. We are using AWS Textract.
 
 ### AWS Textract
-AWS Textract is a critical component for performing accuration text recognition and detection on low quality or skewed images.
+AWS Textract is a critical component for performing accurate text recognition and detection on low quality or skewed images.
 
 Example AWS CLI command:
 
-  aws textract detect-document-text --document '{"S3Object":{"Bucket":"annals","Name":"decathlon-whey.jpeg"}}' --profile administrator --region ap-south-1 --debug
+    aws textract detect-document-text --document '{"S3Object":{"Bucket":"annals","Name":"decathlon-whey.jpeg"}}' --profile administrator --region ap-south-1 --debug
