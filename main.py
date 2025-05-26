@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text, extract_pdf_text_all
 from services import text_analysis
+from textract import detect_text
 
 
 app = FastAPI()
@@ -141,5 +142,20 @@ def ocr(attachment: UploadFile):
         is_success, content = extract_pdf_text_all(file_path=output_filename)
     if is_success is True:
         return content
+    else:
+        raise HTTPException(400, detail=content)
+
+
+@app.post("/textract-ocr")
+def textract_ocr(attachment: UploadFile):
+    type_details = identify_file_type(attachment.file)
+    if not type_details.mime_type.startswith('image'):
+        raise HTTPException(status_code=400, detail="Provide an image")
+    output_filename = f"/media/textract-ocr-files/{attachment.filename}"
+    save_file(attachment.file, output_filename)
+    attachment.file.seek(0)
+    is_success, content = detect_text(output_filename)
+    if is_success is True:
+        return {"content": content}
     else:
         raise HTTPException(400, detail=content)
