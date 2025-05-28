@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 # It's an idempotent operatation
 nltk.download('stopwords')
+nltk.download('punkt_tab')
+nltk.download('words')
 
 
 def identify_file_type(file_object_or_stream: BinaryIO) -> FileMagic:
@@ -173,7 +175,7 @@ def text_analysis(text: str):
     - Unique words
     - Collocations
     """
-    words = text.split(" ")
+    words = nltk.word_tokenize(text)
     # Remove stopwords
     words = [word for word in words if word not in nltk.corpus.stopwords.words("english")]
     uniques = set(words)
