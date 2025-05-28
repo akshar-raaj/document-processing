@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Allow CORS for your frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000"],  # Frontend origin
+    allow_origins=["http://localhost:8000", "http://localhost:8001"],  # Frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -141,7 +141,7 @@ def ocr(attachment: UploadFile):
         # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
         is_success, content = extract_pdf_text_all(file_path=output_filename)
     if is_success is True:
-        return content
+        return {"content": content}
     else:
         raise HTTPException(400, detail=content)
 
