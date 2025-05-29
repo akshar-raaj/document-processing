@@ -72,14 +72,15 @@
       formData.append('mode', ocrMode);
 
       resultText.textContent = 'Processing...';
+      const BASE_URL = 'http://localhost:8000';
 
       try {
         let url = "";
         if (ocrMode == "basic") {
-            url = "http://localhost:8000/ocr"
+            url = BASE_URL + "/ocr"
         }
         else {
-            url = "http://localhost:8000/textract-ocr"
+            url = BASE_URL + "/textract-ocr"
         }
         const response = await fetch(url, {
           method: 'POST',
