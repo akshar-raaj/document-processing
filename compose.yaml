@@ -1,0 +1,14 @@
+services:
+  ocr:
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - type: bind
+        source: ./media
+        target: /media
+    env_file: .env
