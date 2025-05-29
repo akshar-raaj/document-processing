@@ -7,3 +7,4 @@ pytesseract         # Extract text from images
 pdf2image           # Convert non-searchable PDF pages to images, provides convert_from_path. Needs Poppler
 nltk                # natural language toolkit. Used for text analysis
 boto3               # Need to communicate with AWS Textract service
+rq                  # Redis-queue for task/worker setup

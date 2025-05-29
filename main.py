@@ -1,4 +1,6 @@
+import os
 import logging
+import hashlib
 from typing import List
 
 from fastapi import FastAPI
@@ -8,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text, extract_pdf_text_all
 from services import text_analysis
+from tasks import enqueue_extraction
 from textract import detect_text
+from db import get_value
 
 
 app = FastAPI()
@@ -112,7 +116,7 @@ def extract_img_text(attachment: UploadFile):
 
 
 @app.post("/ocr")
-def ocr(attachment: UploadFile):
+def ocr(attachment: UploadFile, sychronous: bool = True):
     """
     TODO: Support multiple attachments
     It could pass a PDF or an image.
@@ -134,16 +138,31 @@ def ocr(attachment: UploadFile):
     output_filename = f"/media/ocr-files/{attachment.filename}"
     save_file(attachment.file, output_filename)
     attachment.file.seek(0)
+    path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
     # Check the content-type, if image, then extract text using Tesseract.
     if type_details.mime_type.startswith('image'):
-        is_success, content = extract_image_text(output_filename)
+        extraction_function = extract_image_text
     elif type_details.mime_type.startswith('application/pdf'):
         # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
-        is_success, content = extract_pdf_text_all(file_path=output_filename)
-    if is_success is True:
-        return {"content": content}
+        extraction_function = extract_pdf_text_all
+    if sychronous is True:
+        is_success, content = extraction_function(file_path=output_filename)
+        if is_success is True:
+            return {"content": content}
+        else:
+            raise HTTPException(400, detail=content)
     else:
-        raise HTTPException(400, detail=content)
+        # Add it to a queue.
+        enqueue_extraction(extraction_function=extraction_function, file_path=output_filename)
+        BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+        link = f"{BASE_URL}/ocr-result/{path_hash}"
+        return {"link": link}
+
+
+@app.get("/ocr-result/{key}")
+def ocr_result(key: str):
+    value = get_value(key)
+    return {"content": value}
 
 
 @app.post("/textract-ocr")
