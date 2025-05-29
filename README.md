@@ -1,5 +1,7 @@
 ## What
 
+This repository powers http://ocr.petprojects.in and http://ocr-api.petprojects.in.
+
 This project performs the following broad functionalities:
 - Text Detection
 - Text Extraction
@@ -10,7 +12,7 @@ It exposes an API endpoint `/ocr` that takes a PDF or an image as an input. It t
 
 `/ocr` performs OCR using Tesseract. Another API endpoint `/textract-ocr` performs OCR using **AWS Textract**. AWS Textract provides better accuracy on low quality images, skewed images and images of handwritten text.
 
-An interactive API documentation is available at `/docs`. This API documentation is generated from an OpenAPI schema.
+An interactive API documentation is available at `/docs`, see http://ocr-api.petprojects.in/docs. This API documentation is generated from an OpenAPI schema.
 
 ## How
 
