@@ -1,3 +1,11 @@
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+<!--Taken from https://github.com/Ileriayo/markdown-badges-->
+
+![GitHub last commit](https://img.shields.io/github/last-commit/akshar-raaj/document-processing) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/akshar-raaj/document-processing/lint.yml)
+
 ## What
 
 This repository powers http://ocr.petprojects.in and http://ocr-api.petprojects.in.
