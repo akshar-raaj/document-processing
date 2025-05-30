@@ -31,6 +31,7 @@
         </form>
       </div>
     </div>
+    <div id="errorAlert" class="alert alert-danger d-none" role="alert">This is an error</div>
 
     <div class="mt-4">
       <h4>Detected Text:</h4>
@@ -47,6 +48,7 @@
     const form = document.getElementById('ocrForm');
     const fileInput = document.getElementById('fileInput');
     const resultText = document.getElementById('resultText');
+    const errorAlert = document.getElementById('errorAlert');
 
     let ocrMode = 'basic'; // default
 
@@ -60,6 +62,10 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      // Reset, hide previous alert
+      errorAlert.classList.add('d-none');
+      errorAlert.textContent = '';
+      resultText.textContent = 'Processing.....';
 
       const file = fileInput.files[0];
       if (!file) {
@@ -69,10 +75,12 @@
 
       const formData = new FormData();
       formData.append('attachment', file);
-      formData.append('mode', ocrMode);
+      formData.append('synchronous', false);
 
       resultText.textContent = 'Processing...';
       const BASE_URL = 'http://localhost:8000';
+      let pollUrl;
+      let response;
 
       try {
         let url = "";
@@ -82,19 +90,44 @@
         else {
             url = BASE_URL + "/textract-ocr"
         }
-        const response = await fetch(url, {
+        response = await fetch(url, {
           method: 'POST',
           body: formData,
         });
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error('Server error during OCR.');
+          throw new Error(data.detail);
         }
 
-        const data = await response.json();
-        resultText.textContent = data.content || 'No text detected.';
+        pollUrl = data.link;
       } catch (error) {
-        resultText.textContent = 'Error: ' + error.message;
+        errorAlert.textContent = error.message;
+        errorAlert.classList.remove('d-none')
+        resultText.textContent = '';
+      }
+      if (response.ok) {
+        // Polling every 2 seconds
+        const pollInterval = 2000;
+
+        const poll = setInterval(async () => {
+          try {
+            const pollResponse = await fetch(pollUrl);
+            if (!pollResponse.ok) throw new Error('Polling error.');
+
+            const result = await pollResponse.json();
+
+            if (result.content !== null) {
+              clearInterval(poll);
+              resultText.textContent = result.content;
+            }
+            // If status is "pending", keep polling
+
+          } catch (pollError) {
+            clearInterval(poll);
+            resultText.textContent = 'Polling error: ' + pollError.message;
+          }
+        }, pollInterval);
       }
     });
   </script>

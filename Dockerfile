@@ -15,4 +15,9 @@ COPY requirements.txt /app
 
 RUN pip install -r requirements.txt
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["fastapi", "dev", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/start.sh"]
