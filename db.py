@@ -1,8 +1,11 @@
 """
 Redis is being used as the primary database.
-Our use case is extremely simple. We are dealing with a single entity, i.e a FilePath, and store the extracted text content.
+Our use case is extremely simple.
+- We want an identifier for a file.
+- And need to associate the extracted content from this file and map it with the identifier.
+
 Hence, a Key-Value data store suffices.
-We do not want to get into the complexity of setting up a Relational Database or a Document database which has more administrative overhead.
+We do not want to get into the complexity of setting up a Relational Database with and manage the schema nor deal with a Document database which has more administrative overhead.
 """
 import os
 import redis
@@ -25,6 +28,9 @@ def get_connection():
 
 
 def get_value(key: str) -> str:
+    """
+    `key` is the file identifier. In our case a hash created using the file path.
+    """
     connection = get_connection()
     value = connection.get(key)
     if value is None:
@@ -37,6 +43,10 @@ def get_value(key: str) -> str:
 
 
 def set_value(key: str, value: str):
+    """
+    `key` is the file identifier. In our case a hash created using the file path.
+    `value` is the extracted text content after performing the Optical Character Recognition.
+    """
     connection = get_connection()
     value = value.encode('utf-8')
     connection.set(key, value)
