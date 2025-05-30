@@ -1,3 +1,6 @@
+"""
+Integration with Amazon Textract for performing Text Detection and Optical Character Recognition.
+"""
 import boto3
 import os
 import logging

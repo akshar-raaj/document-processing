@@ -134,16 +134,17 @@ def extract_pdf_text_all(file_path: str):
     convert_from_path(file_path, output_folder=output_folder, fmt="png", output_file=basename)
     # The converted images have been saved now.
     converted_images_paths = sorted(glob.glob(f"{output_folder}/{basename}*.png"))
-    # Just consider the first image for now.
     # We will extend it for all images later.
     is_successes = []
     contents = []
     for converted_image_path in converted_images_paths:
         is_success, content = extract_image_text(converted_image_path)
-        if is_success is False:
-            logger.info(f"Failed to extract text from {converted_image_path}")
         is_successes.append(is_success)
-        contents.append(content)
+        if is_success is True:
+            # Only concatenate the contents from pages that we were able to extract.
+            contents.append(content)
+        else:
+            logger.info(f"Failed to extract text from {converted_image_path}")
     return any(is_successes), "\n".join(contents)
 
 

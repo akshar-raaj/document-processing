@@ -148,6 +148,10 @@ def ocr(attachment: UploadFile, sychronous: bool = True):
     if sychronous is True:
         is_success, content = extraction_function(file_path=output_filename)
         if is_success is True:
+            # Add one more step.
+            # Perform text analysis on the extracted text.
+            # If the extracted text is gibberish, then probably it was a low quality/skewed/noisy input.
+            # Hence perform text detection using Amazon Textract for better accuracy.
             return {"content": content}
         else:
             raise HTTPException(400, detail=content)
