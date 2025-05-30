@@ -4,7 +4,7 @@ import hashlib
 from typing import List
 
 from fastapi import FastAPI
-from fastapi import UploadFile
+from fastapi import UploadFile, Form
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -116,7 +116,7 @@ def extract_img_text(attachment: UploadFile):
 
 
 @app.post("/ocr")
-def ocr(attachment: UploadFile, sychronous: bool = True):
+def ocr(attachment: UploadFile, synchronous: bool = Form(True)):
     """
     TODO: Support multiple attachments
     It could pass a PDF or an image.
@@ -145,7 +145,7 @@ def ocr(attachment: UploadFile, sychronous: bool = True):
     elif type_details.mime_type.startswith('application/pdf'):
         # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
         extraction_function = extract_pdf_text_all
-    if sychronous is True:
+    if synchronous is True:
         is_success, content = extraction_function(file_path=output_filename)
         if is_success is True:
             # Add one more step.
@@ -170,15 +170,23 @@ def ocr_result(key: str):
 
 
 @app.post("/textract-ocr")
-def textract_ocr(attachment: UploadFile):
+def textract_ocr(attachment: UploadFile, synchronous: bool = Form(True)):
     type_details = identify_file_type(attachment.file)
     if not type_details.mime_type.startswith('image'):
         raise HTTPException(status_code=400, detail="Provide an image")
     output_filename = f"/media/textract-ocr-files/{attachment.filename}"
     save_file(attachment.file, output_filename)
     attachment.file.seek(0)
-    is_success, content = detect_text(output_filename)
-    if is_success is True:
-        return {"content": content}
+    if synchronous is True:
+        is_success, content = detect_text(output_filename)
+        if is_success is True:
+            return {"content": content}
+        else:
+            raise HTTPException(400, detail=content)
     else:
-        raise HTTPException(400, detail=content)
+        # Add it to a queue.
+        enqueue_extraction(extraction_function=detect_text, file_path=output_filename)
+        path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
+        BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+        link = f"{BASE_URL}/ocr-result/{path_hash}"
+        return {"link": link}
