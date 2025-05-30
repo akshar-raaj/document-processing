@@ -50,3 +50,15 @@ AWS Textract is a critical component for performing accurate text recognition an
 Example AWS CLI command:
 
     aws textract detect-document-text --document '{"S3Object":{"Bucket":"annals","Name":"decathlon-whey.jpeg"}}' --profile administrator --region ap-south-1 --debug
+
+### nltk
+It is being used to perform Natural Language Processing. We have the ability to analyse the extracted text and infer:
+- Word Frequency
+- Repetitions and Lexical Diversity
+- Parts of Speech Tagging
+- Named Entity Recognition
+
+For advanced purposes, we might explore using spaCy.
+
+### rq
+rq(Redis Queue) is being used to enqueue the OCR extraction tasks on a Redis List. Workers running in the background dequeue from this list and invoke the service functions to perform actual OCR.
