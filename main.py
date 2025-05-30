@@ -56,7 +56,7 @@ def pdfs_merge(attachments: List[UploadFile]):
     """
     # First validate that all the attachments are PDFs.
     if len(attachments) > 10:
-        raise HTTPException(status_code=400, detail=f"A maximum of 10 attachments are allowed.")
+        raise HTTPException(status_code=400, detail="A maximum of 10 attachments are allowed.")
     logger.info("Performing mime type validation on attachments.")
     for attachment in attachments:
         # Save the attachment for further analysis
