@@ -1,7 +1,6 @@
 import os
 import glob
 import logging
-import nltk
 from typing import List, BinaryIO
 
 import magic
@@ -19,14 +18,10 @@ from pdf2image import convert_from_path
 
 from fastapi import UploadFile
 
+from image_preprocessing import preprocess_image
+
 
 logger = logging.getLogger(__name__)
-
-
-# It's an idempotent operatation
-nltk.download('stopwords')
-nltk.download('punkt_tab')
-nltk.download('words')
 
 
 def identify_file_type(file_object_or_stream: BinaryIO) -> FileMagic:
@@ -161,28 +156,11 @@ def extract_image_text(file_path: str):
     A TesseractError would happen, and will be handled, if the file is non-image.
     """
     try:
-        text = pytesseract.image_to_string(file_path)
-        return True, text
+        # Raw image OCR
+        raw_image_text = pytesseract.image_to_string(file_path)
+        # Preprocessed image OCR
+        processed_image_path = preprocess_image(file_path)
+        pytesseract.image_to_string(processed_image_path)
+        return True, raw_image_text
     except TesseractError:
         return False, "An invalid or corrupted image"
-
-
-def text_analysis(text: str):
-    """
-    Performs analysis on text using nltk.
-    Currently does the following:
-    - Length of the text
-    - Most common words
-    - Unique words
-    - Collocations
-    """
-    words = nltk.word_tokenize(text)
-    # Remove stopwords
-    words = [word for word in words if word not in nltk.corpus.stopwords.words("english")]
-    uniques = set(words)
-    text = nltk.Text(words)
-    freq_dist = nltk.FreqDist(text)
-    length = len(text)
-    most_common = freq_dist.most_common(10)
-    collocations = text.collocations()
-    return {"length": length, "most_common": most_common, "uniques": uniques, "collocations": collocations}
