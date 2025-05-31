@@ -38,3 +38,18 @@ def analyze(text: str):
     most_common = freq_dist.most_common(10)
     collocations = text.collocations()
     return {"length": length, "most_common": most_common, "uniques": uniques, "collocations": collocations}
+
+
+def is_meaningful_content(text: str):
+    # If lot of single character words, which isn't even 'a' or 'i'.
+    SINGLE_CHARACTER_PERCENTAGE_THRESHOLD = 0.5
+    words = nltk.word_tokenize(text)
+    single_character_count = 0
+    for word in words:
+        if len(word) == 1 and word.lower() not in ['a', 'i']:
+            single_character_count += 1
+    if single_character_count / len(words) > SINGLE_CHARACTER_PERCENTAGE_THRESHOLD:
+        return False
+    # If we are able to extract only page end markers, then it's an non meaningful content.
+    # \x0c is the page end marker.
+    return True
