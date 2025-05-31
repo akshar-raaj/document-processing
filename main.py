@@ -8,7 +8,7 @@ from fastapi import UploadFile, Form
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text, get_file_size, extract_image_text, extract_pdf_text_all
+from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text_searchable, get_file_size, extract_image_text, extract_pdf_text_all
 from text_analysis import analyze
 from tasks import enqueue_extraction
 from textract import detect_text
@@ -85,7 +85,7 @@ def extract_text(attachment: UploadFile):
     output_filename = f"/media/extraction-pdfs/{attachment_name}"
     save_file(attachment.file, output_filename)
     attachment.file.seek(0)
-    is_success, content = extract_pdf_text(attachment.file)
+    is_success, content = extract_pdf_text_searchable(attachment.file)
     if is_success is False:
         raise HTTPException(status_code=400, detail=content)
     analysis_result = analyze(content)

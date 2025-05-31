@@ -1,3 +1,8 @@
+"""
+rq integration
+
+To use Redis Queue to handle the extraction tasks.
+"""
 import hashlib
 from rq import Queue
 

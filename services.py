@@ -3,22 +3,31 @@ import glob
 import logging
 from typing import List, BinaryIO
 
+# File mime-type detection
 import magic
 from magic.compat import FileMagic
 
+# PDF manipulation
 from pikepdf import Pdf
 
+# PDF text extraction
 from pdfminer.high_level import extract_text
 from pdfminer.pdfparser import PDFSyntaxError
 
+# Image text extraction
+# OCR can only happen on images, OCR doesn't work with PDF
 import pytesseract
 from pytesseract.pytesseract import TesseractError
 
+# Convert non-searchable PDFs to images before performing OCR
 from pdf2image import convert_from_path
 
 from fastapi import UploadFile
 
+# Perform image preprocessing to improve image quality, crispness and readability
 from image_preprocessing import preprocess_image
+
+from text_analysis import is_meaningful_content
 
 
 logger = logging.getLogger(__name__)
@@ -90,7 +99,7 @@ def save_file(file: BinaryIO, path: str):
     logger.info(f"Saved file to {path}")
 
 
-def extract_pdf_text(file: BinaryIO):
+def extract_pdf_text_searchable(file: BinaryIO):
     """
     :param: A file like object, opened in binary mode.
     Extracts text from a PDF containing embedded text using pdfminer.six library.
@@ -105,23 +114,13 @@ def extract_pdf_text(file: BinaryIO):
         return False, "An invalid or corrupted PDF"
 
 
-def extract_pdf_text_all(file_path: str):
+def extract_pdf_text_non_searchable(file_path: str):
     """
-    Attempts extraction for both searchable and non-searchable PDFs.
-
-    1. For searchable_pdfs, delegate to extract_pdf_text which uses pdfminer.six
-    2. For non-searchable PDFs, convert to an image and then extract text
+    :param: A PDF file path.
+    Extracts text from non searchable PDFs i.e scanned PDFs that don't have embedded text.
+    Converts a PDF to an image and then extracts text from it. Delegates to extract_image_text which
+    performs OCR using Pytesseract.
     """
-    f = open(file_path, "rb")
-    is_success, content = extract_pdf_text(f)
-    f.close()
-    if is_success is False:
-        # It's not even a PDF probably
-        return False, content
-    if len(content) > 10:
-        return True, content
-    # Probably it's a non-searchable PDF, that's why we were able to get less than 10 characters.
-    # Convert it to an image first
     output_folder = "/media/pdf-to-image"   # Directory name -> /media/pdf-to-image
     basename = os.path.basename(file_path)       # File name -> sample.pdf
     if '.pdf' in basename:
@@ -129,7 +128,6 @@ def extract_pdf_text_all(file_path: str):
     convert_from_path(file_path, output_folder=output_folder, fmt="png", output_file=basename)
     # The converted images have been saved now.
     converted_images_paths = sorted(glob.glob(f"{output_folder}/{basename}*.png"))
-    # We will extend it for all images later.
     is_successes = []
     contents = []
     for converted_image_path in converted_images_paths:
@@ -141,6 +139,25 @@ def extract_pdf_text_all(file_path: str):
         else:
             logger.info(f"Failed to extract text from {converted_image_path}")
     return any(is_successes), "\n".join(contents)
+
+
+def extract_pdf_text_all(file_path: str):
+    """
+    Attempts extraction for both searchable and non-searchable PDFs.
+
+    1. For searchable_pdfs, delegate to extract_pdf_text which uses pdfminer.six
+    2. For non-searchable PDFs, convert to an image and then extract text
+    """
+    f = open(file_path, "rb")
+    is_success, content = extract_pdf_text_searchable(f)
+    f.close()
+    if is_success is False:
+        # It's not even a PDF probably
+        return False, content
+    if is_meaningful_content(content):
+        return True, content
+    is_success, content = extract_pdf_text_non_searchable(file_path)
+    return is_success, content
 
 
 def get_file_size(file):
@@ -156,11 +173,7 @@ def extract_image_text(file_path: str):
     A TesseractError would happen, and will be handled, if the file is non-image.
     """
     try:
-        # Raw image OCR
-        raw_image_text = pytesseract.image_to_string(file_path)
-        # Preprocessed image OCR
-        processed_image_path = preprocess_image(file_path)
-        pytesseract.image_to_string(processed_image_path)
-        return True, raw_image_text
+        text = pytesseract.image_to_string(file_path)
+        return True, text
     except TesseractError:
         return False, "An invalid or corrupted image"

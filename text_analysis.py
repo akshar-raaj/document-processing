@@ -44,6 +44,9 @@ def is_meaningful_content(text: str):
     # If lot of single character words, which isn't even 'a' or 'i'.
     SINGLE_CHARACTER_PERCENTAGE_THRESHOLD = 0.5
     words = nltk.word_tokenize(text)
+    # No word could be extracted
+    if len(words) == 0:
+        return False
     single_character_count = 0
     for word in words:
         if len(word) == 1 and word.lower() not in ['a', 'i']:
@@ -52,4 +55,7 @@ def is_meaningful_content(text: str):
         return False
     # If we are able to extract only page end markers, then it's an non meaningful content.
     # \x0c is the page end marker.
+    PAGE_MARGER_PERCENTAGE_THRESHOLD = 0.5
+    if text.count("\x0c") / len(text) > PAGE_MARGER_PERCENTAGE_THRESHOLD:
+        return False
     return True
