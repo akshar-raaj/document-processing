@@ -1,3 +1,16 @@
+"""
+Natural Language Processing.
+
+Can perform things like:
+- Parts of Speech tagging.
+- Named Entity Recognition
+- Finding digits, words etc.
+- Stopwords removal
+- Compute Lexical Diversity
+
+TODO:
+- Summarization
+"""
 import nltk
 
 # It's an idempotent operatation
