@@ -20,4 +20,5 @@ def report_success(job, connection, result, *args, **kwargs):
 def enqueue_extraction(extraction_function, file_path):
     connection = get_connection()
     q = Queue(connection=connection)
+    # Extraction should be performed on the raw image as well as processed image.
     q.enqueue(extraction_function, file_path, on_success=report_success)
