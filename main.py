@@ -4,7 +4,7 @@ import hashlib
 from typing import List
 
 from fastapi import FastAPI
-from fastapi import UploadFile
+from fastapi import UploadFile, Form
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -117,7 +117,7 @@ def extract_img_text(attachment: UploadFile):
 
 
 @app.post("/ocr")
-def ocr(attachment: UploadFile):
+def ocr(attachment: UploadFile, gray: bool = Form(True), denoise: bool = Form(True), binarize: bool = Form(True)):
     """
     TODO: Support multiple attachments
     It could pass a PDF or an image.
@@ -133,6 +133,11 @@ def ocr(attachment: UploadFile):
     In all of the above cases, the processing would happen asynchronously.
     The task would be queued and a link would be returned to the user.
     """
+    options = {
+        "gray": gray,
+        "denoise": denoise,
+        "binarize": binarize
+    }
     type_details = identify_file_type(attachment.file)
     if not type_details.mime_type.startswith('image') and not type_details.mime_type.startswith('application/pdf'):
         raise HTTPException(status_code=400, detail="Provide either an image or a PDF")
@@ -145,7 +150,7 @@ def ocr(attachment: UploadFile):
     if type_details.mime_type.startswith('image'):
         # Attempt extraction through Tesseract
         set_object(key=path_hash, field="type", value="image")
-        enqueue_extraction(extraction_function=extract_image_text_and_set_db, file_path=output_filename, key=path_hash)
+        enqueue_extraction(extraction_function=extract_image_text_and_set_db, file_path=output_filename, key=path_hash, options=options)
     elif type_details.mime_type.startswith('application/pdf'):
         # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
         set_object(key=path_hash, field="type", value="pdf")

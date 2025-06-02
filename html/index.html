@@ -18,31 +18,35 @@
             <label for="fileInput" class="form-label">Upload an image, a scanned document or a PDF.</label>
             <input class="form-control" type="file" id="fileInput" accept="image/*,.pdf" required>
           </div>
-<div class="accordion mb-3" id="processingOptionsAccordion">
-  <div class="accordion-item border-0">
-    <h2 class="accordion-header" id="headingOptions">
-      <button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseOptions">
-        Advanced Options <span class="text-muted ms-2 small">(optional)</span>
-      </button>
-    </h2>
-    <div id="collapseOptions" class="accordion-collapse collapse" aria-labelledby="headingOptions" data-bs-parent="#processingOptionsAccordion">
-      <div class="accordion-body py-2">
-        <div class="form-check small mb-1">
-          <input class="form-check-input" type="checkbox" value="true" id="removeNoise" name="remove_noise">
-          <label class="form-check-label" for="removeNoise">Remove noise and specks (Uses Bilateral Filter)</label>
-        </div>
-        <div class="form-check small mb-1">
-          <input class="form-check-input" type="checkbox" value="true" id="binarization" name="binarize">
-          <label class="form-check-label" for="binarization">Perform binarization (Uses Adaptive Thresholding)</label>
-        </div>
-        <div class="form-check small">
-          <input class="form-check-input" type="checkbox" value="true" id="autoRotate" name="auto_rotate">
-          <label class="form-check-label" for="autoRotate">Auto rotate if needed (Contour Detection and Alignment)</label>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+          <div class="accordion mb-3" id="processingOptionsAccordion">
+            <div class="accordion-item border-0">
+              <h2 class="accordion-header" id="headingOptions">
+                <button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseOptions">
+                  Advanced Options <span class="text-muted ms-2 small">(optional)</span>
+                </button>
+              </h2>
+              <div id="collapseOptions" class="accordion-collapse collapse" aria-labelledby="headingOptions" data-bs-parent="#processingOptionsAccordion">
+                <div class="accordion-body py-2">
+                  <div class="form-check small mb-1">
+                    <input class="form-check-input" type="checkbox" value="true" id="gray" name="gray" checked>
+                    <label class="form-check-label" for="gray">Perform Grayscale conversion</label>
+                  </div>
+                  <div class="form-check small mb-1">
+                    <input class="form-check-input" type="checkbox" value="true" id="denoise" name="denoise" checked>
+                    <label class="form-check-label" for="denoise">Remove noise and specks (Uses Bilateral Filter)</label>
+                  </div>
+                  <div class="form-check small mb-1">
+                    <input class="form-check-input" type="checkbox" value="true" id="binarize" name="binarize" checked>
+                    <label class="form-check-label" for="binarize">Perform binarization (Uses Adaptive Thresholding)</label>
+                  </div>
+                  <div class="form-check small">
+                    <input class="form-check-input" type="checkbox" value="true" id="autoRotate" name="auto_rotate" checked>
+                    <label class="form-check-label" for="autoRotate">Auto rotate if needed (Contour Detection and Alignment)</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="d-flex justify-content-between">
             <button type="submit" class="btn btn-outline-success w-50 me-2 d-flex align-items-center justify-content-center gap-2" data-mode="basic">
               Basic OCR (Faster and Recommended)
@@ -87,10 +91,6 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      // Reset, hide previous alert
-      errorAlert.classList.add('d-none');
-      errorAlert.textContent = '';
-      resultText.textContent = 'OCR and Recognition is computationally expensive, and takes time. Please wait...';
 
       const file = fileInput.files[0];
       if (!file) {
@@ -98,9 +98,21 @@
         return;
       }
 
+      // Get checkbox states
+      const grayChecked = document.getElementById('gray').checked;
+      const denoiseChecked = document.getElementById('denoise').checked;
+      const binarizeChecked = document.getElementById('binarize').checked;
+      // Reset, hide previous alert
+      errorAlert.classList.add('d-none');
+      errorAlert.textContent = '';
+      resultText.textContent = 'OCR and Recognition is computationally expensive, and takes time. Please wait...';
+
       const formData = new FormData();
       formData.append('attachment', file);
       formData.append('synchronous', false);
+      formData.append('gray', grayChecked);
+      formData.append('denoise', denoiseChecked);
+      formData.append('binarize', binarizeChecked);
 
       resultText.textContent = 'OCR and Recognition is computationally expensive, and takes time. Please wait...';
       const BASE_URL = 'http://localhost:8000';
