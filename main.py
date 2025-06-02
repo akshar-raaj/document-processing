@@ -143,15 +143,13 @@ def ocr(attachment: UploadFile):
     path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
     # Check the content-type, if image, then extract text using Tesseract.
     if type_details.mime_type.startswith('image'):
-        extraction_function = extract_image_text_and_set_db
-        # processed_file_path = preprocess_image_opencv(output_filename)
+        # Attempt extraction through Tesseract
         set_object(key=path_hash, field="type", value="image")
-        enqueue_extraction(extraction_function=extract_image_text_and_set_db, file_path=output_filename, key=path_hash, field="content")
+        enqueue_extraction(extraction_function=extract_image_text_and_set_db, file_path=output_filename, key=path_hash)
     elif type_details.mime_type.startswith('application/pdf'):
         # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
-        extraction_function = extract_pdf_text_and_set_db
         set_object(key=path_hash, field="type", value="pdf")
-        enqueue_extraction(extraction_function=extraction_function, file_path=output_filename, key=path_hash, field="content")
+        enqueue_extraction(extraction_function=extract_pdf_text_and_set_db, file_path=output_filename, key=path_hash)
     # Add it to a queue.
     BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
     link = f"{BASE_URL}/ocr-result/{path_hash}"
