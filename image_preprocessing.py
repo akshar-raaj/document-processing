@@ -52,7 +52,7 @@ def preprocess_image_opencv(file_path: str, options: dict = None, source: str = 
 
     Currently performs:
     - Color space conversion from RGB to Grayscale, to make the image easier to read
-    - Denoising, Smoothing and Blurring to remove specks/grains, using fastNlMeansDenoising.
+    - Denoising, Smoothing and Blurring to remove specks/grains, using fastNlMeansDenoising or bilateralFilter
     - Binarisation, to have black text on a white background
 
     TODO:
@@ -98,3 +98,4 @@ def preprocess_image_opencv(file_path: str, options: dict = None, source: str = 
     # Find the margins and crop
     output_path = f"{base}-cv-processed.{ext}"
     cv.imwrite(output_path, img)
+    return output_path
