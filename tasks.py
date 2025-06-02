@@ -2,23 +2,19 @@
 rq integration
 
 To use Redis Queue to handle the extraction tasks.
+
+A guiding principle for tasks is that they should be self-contained.
+Hence, the task itself should do any processing whether computational or I/O bound.
+And once the task has completed, it is responsible for writing it to the database.
+result_callbacks are messy, and we want to avoid them.
 """
-import hashlib
 from rq import Queue
 
-from db import get_connection, set_value
+# Only required to get the Redis connection which orchestrates the queue.
+from db import get_connection
 
 
-def report_success(job, connection, result, *args, **kwargs):
-    is_success, extracted_text = result
-    file_path = job.args[0]
-    path_hash = hashlib.sha256(file_path.encode('utf-8')).hexdigest()
-    # Write this result to the data store.
-    set_value(path_hash, extracted_text)
-
-
-def enqueue_extraction(extraction_function, file_path):
+def enqueue_extraction(extraction_function, **kwargs):
     connection = get_connection()
     q = Queue(connection=connection)
-    # Extraction should be performed on the raw image as well as processed image.
-    q.enqueue(extraction_function, file_path, on_success=report_success)
+    q.enqueue(extraction_function, **kwargs)

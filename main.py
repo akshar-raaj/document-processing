@@ -4,15 +4,16 @@ import hashlib
 from typing import List
 
 from fastapi import FastAPI
-from fastapi import UploadFile, Form
+from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text_searchable, get_file_size, extract_image_text, extract_pdf_text_all
+from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text_searchable, get_file_size, extract_image_text
+from service_wrappers import extract_image_text_and_set_db, extract_pdf_text_and_set_db
+from textract_wrapper import detect_text_and_set_db
 from text_analysis import analyze
 from tasks import enqueue_extraction
-from textract import detect_text
-from db import get_value
+from db import set_object, get_object
 
 
 app = FastAPI()
@@ -116,7 +117,7 @@ def extract_img_text(attachment: UploadFile):
 
 
 @app.post("/ocr")
-def ocr(attachment: UploadFile, synchronous: bool = Form(True)):
+def ocr(attachment: UploadFile):
     """
     TODO: Support multiple attachments
     It could pass a PDF or an image.
@@ -129,7 +130,8 @@ def ocr(attachment: UploadFile, synchronous: bool = Form(True)):
     Searchable: We can use pdfminer.six as being used.
     Non-Searchable: Covert the PDF to an image and then extract the text
 
-    In all of the above cases, the text should be extracted and returned from here.
+    In all of the above cases, the processing would happen asynchronously.
+    The task would be queued and a link would be returned to the user.
     """
     type_details = identify_file_type(attachment.file)
     if not type_details.mime_type.startswith('image') and not type_details.mime_type.startswith('application/pdf'):
@@ -141,52 +143,45 @@ def ocr(attachment: UploadFile, synchronous: bool = Form(True)):
     path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
     # Check the content-type, if image, then extract text using Tesseract.
     if type_details.mime_type.startswith('image'):
-        extraction_function = extract_image_text
+        extraction_function = extract_image_text_and_set_db
+        # processed_file_path = preprocess_image_opencv(output_filename)
+        set_object(key=path_hash, field="type", value="image")
+        enqueue_extraction(extraction_function=extract_image_text_and_set_db, file_path=output_filename, key=path_hash, field="content")
     elif type_details.mime_type.startswith('application/pdf'):
         # Attempt extracting text using pdfminer.six or else through the image conversion -> OCR pipeline.
-        extraction_function = extract_pdf_text_all
-    if synchronous is True:
-        is_success, content = extraction_function(file_path=output_filename)
-        if is_success is True:
-            # Add one more step.
-            # Perform text analysis on the extracted text.
-            # If the extracted text is gibberish, then probably it was a low quality/skewed/noisy input.
-            # Hence perform text detection using Amazon Textract for better accuracy.
-            return {"content": content}
-        else:
-            raise HTTPException(400, detail=content)
-    else:
-        # Add it to a queue.
-        enqueue_extraction(extraction_function=extraction_function, file_path=output_filename)
-        BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
-        link = f"{BASE_URL}/ocr-result/{path_hash}"
-        return {"link": link}
+        extraction_function = extract_pdf_text_and_set_db
+        set_object(key=path_hash, field="type", value="pdf")
+        enqueue_extraction(extraction_function=extraction_function, file_path=output_filename, key=path_hash, field="content")
+    # Add it to a queue.
+    BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+    link = f"{BASE_URL}/ocr-result/{path_hash}"
+    return {"link": link}
 
 
 @app.get("/ocr-result/{key}")
 def ocr_result(key: str):
-    value = get_value(key)
-    return {"content": value}
+    content = get_object(key, "content")
+    if content is None:
+        return {"content": content}
+    # Remove empty lines
+    lines = content.splitlines()
+    non_blank_lines = [line for line in lines if line.strip() != '']
+    content = '\n'.join(non_blank_lines)
+    return {"content": content}
 
 
 @app.post("/textract-ocr")
-def textract_ocr(attachment: UploadFile, synchronous: bool = Form(True)):
+def textract_ocr(attachment: UploadFile):
     type_details = identify_file_type(attachment.file)
     if not type_details.mime_type.startswith('image'):
         raise HTTPException(status_code=400, detail="Provide an image")
     output_filename = f"/media/textract-ocr-files/{attachment.filename}"
     save_file(attachment.file, output_filename)
     attachment.file.seek(0)
-    if synchronous is True:
-        is_success, content = detect_text(output_filename)
-        if is_success is True:
-            return {"content": content}
-        else:
-            raise HTTPException(400, detail=content)
-    else:
-        # Add it to a queue.
-        enqueue_extraction(extraction_function=detect_text, file_path=output_filename)
-        path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
-        BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
-        link = f"{BASE_URL}/ocr-result/{path_hash}"
-        return {"link": link}
+    path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
+    set_object(key=path_hash, field="type", value="pdf")
+    # Add it to a queue.
+    enqueue_extraction(extraction_function=detect_text_and_set_db, file_path=output_filename, key=path_hash, field="content")
+    BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+    link = f"{BASE_URL}/ocr-result/{path_hash}"
+    return {"link": link}

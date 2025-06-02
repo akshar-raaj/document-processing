@@ -18,14 +18,39 @@
             <label for="fileInput" class="form-label">Upload an image, a scanned document or a PDF.</label>
             <input class="form-control" type="file" id="fileInput" accept="image/*,.pdf" required>
           </div>
+<div class="accordion mb-3" id="processingOptionsAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header" id="headingOptions">
+      <button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions" aria-expanded="false" aria-controls="collapseOptions">
+        Advanced Options <span class="text-muted ms-2 small">(optional)</span>
+      </button>
+    </h2>
+    <div id="collapseOptions" class="accordion-collapse collapse" aria-labelledby="headingOptions" data-bs-parent="#processingOptionsAccordion">
+      <div class="accordion-body py-2">
+        <div class="form-check small mb-1">
+          <input class="form-check-input" type="checkbox" value="true" id="removeNoise" name="remove_noise">
+          <label class="form-check-label" for="removeNoise">Remove noise and specks (Uses Bilateral Filter)</label>
+        </div>
+        <div class="form-check small mb-1">
+          <input class="form-check-input" type="checkbox" value="true" id="binarization" name="binarize">
+          <label class="form-check-label" for="binarization">Perform binarization (Uses Adaptive Thresholding)</label>
+        </div>
+        <div class="form-check small">
+          <input class="form-check-input" type="checkbox" value="true" id="autoRotate" name="auto_rotate">
+          <label class="form-check-label" for="autoRotate">Auto rotate if needed (Contour Detection and Alignment)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
           <div class="d-flex justify-content-between">
-            <button type="submit" class="btn btn-outline-primary w-50 me-2 d-flex align-items-center justify-content-center gap-2" data-mode="basic">
-              Basic OCR
-              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Works for high quality documents."></i>
+            <button type="submit" class="btn btn-outline-success w-50 me-2 d-flex align-items-center justify-content-center gap-2" data-mode="basic">
+              Basic OCR (Faster and Recommended)
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="For scanned documents, PDF and high quality images."></i>
             </button>
-            <button type="submit" class="btn btn-outline-success w-50 d-flex align-items-center justify-content-center gap-2" data-mode="advanced">
-              Advanced OCR
-              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Works better for Handwritten text and low quality documents."></i>
+            <button type="submit" class="btn btn-outline-primary w-50 d-flex align-items-center justify-content-center gap-2" data-mode="advanced">
+              Advanced OCR (Slower but more accurate)
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="For Handwritten text and low quality documents."></i>
             </button>
           </div>
         </form>
@@ -65,7 +90,7 @@
       // Reset, hide previous alert
       errorAlert.classList.add('d-none');
       errorAlert.textContent = '';
-      resultText.textContent = 'Processing.....';
+      resultText.textContent = 'OCR and Recognition is computationally expensive, and takes time. Please wait...';
 
       const file = fileInput.files[0];
       if (!file) {
@@ -77,7 +102,7 @@
       formData.append('attachment', file);
       formData.append('synchronous', false);
 
-      resultText.textContent = 'Processing...';
+      resultText.textContent = 'OCR and Recognition is computationally expensive, and takes time. Please wait...';
       const BASE_URL = 'http://localhost:8000';
       let pollUrl;
       let response;

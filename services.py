@@ -1,3 +1,9 @@
+"""
+This module is supposed to only import Python built-ins or third-party libraries.
+
+It can import application module only if that module too adherese to the above policy.
+"""
+
 import os
 import glob
 import logging
@@ -23,9 +29,6 @@ from pytesseract.pytesseract import TesseractError
 from pdf2image import convert_from_path
 
 from fastapi import UploadFile
-
-# Perform image preprocessing to improve image quality, crispness and readability
-from image_preprocessing import preprocess_image
 
 from text_analysis import is_meaningful_content
 
