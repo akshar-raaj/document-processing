@@ -58,6 +58,10 @@ def preprocess_image_opencv(file_path: str, options: dict = None, source: str = 
     TODO:
     - Cropping the area of interest
     - Rotation and Alignment: Using Canny, HoughLines.
+
+    Usage:
+
+        preprocess_image_opencv("/media/ocr-files/ocr-pan.jpeg", options={"denoise": False, "binarize": False})
     """
     default_options = {
         "gray": True,
@@ -74,6 +78,10 @@ def preprocess_image_opencv(file_path: str, options: dict = None, source: str = 
     if default_options['denoise'] is True and default_options['gray'] is False:
         # Force grayscale, as denoising is done in grayscale
         logger.info("Forcing grayscale, as denoising is done in grayscale")
+        default_options['gray'] = True
+    if default_options['binarize'] is True and default_options['gray'] is False:
+        # Force grayscale, as denoising is done in grayscale
+        logger.info("Forcing grayscale, as binarizing is done in grayscale")
         default_options['gray'] = True
     if default_options['gray'] is True:
         img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
