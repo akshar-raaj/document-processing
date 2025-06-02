@@ -71,3 +71,7 @@ For advanced purposes, we might explore using spaCy.
 
 ### rq
 rq(Redis Queue) is being used to enqueue the OCR extraction tasks on a Redis List. Workers running in the background dequeue from this list and invoke the service functions to perform actual OCR.
+
+### opencv-contrib-python
+Provides Computer Vision and Image processing capability. We preprocess the image before performing recognition and detection.
+We apply grayscaling, smoothing and denoising, and thresholding and binarisation.
