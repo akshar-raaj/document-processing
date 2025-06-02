@@ -15,6 +15,10 @@ from db import get_connection
 
 
 def enqueue_extraction(extraction_function, **kwargs):
+    """
+    Usage:
+    enqueue_extraction(extraction_function=detect_text_and_set_db, file_path="/media/textract-ocr-files/abc.pdf", key="some-hash")
+    """
     connection = get_connection()
     q = Queue(connection=connection)
     q.enqueue(extraction_function, **kwargs)
