@@ -59,3 +59,47 @@ def is_meaningful_content(text: str):
     if text.count("\x0c") / len(text) > PAGE_MARGER_PERCENTAGE_THRESHOLD:
         return False
     return True
+
+
+def classify(text: str):
+    """
+    Classifies a text into various categories. Currently supported categories are:
+    - PAN Card
+    - Aadhar Card
+    - Passport
+
+    It currently does a simple string matching. We will move to NLP NaiveBayes Classification soon.
+    And gradually to more advanced classification models.
+    """
+    lowered_text = text.lower()
+    passport_needed_words = ['india', 'indian', 'surname', 'nationality', 'given', 'name', 'passport', 'date of birth', 'place of birth', 'place of issue', 'date of issue', 'passport no']
+    passport_found_words = 0
+    for passport_word in passport_needed_words:
+        if passport_word in lowered_text:
+            passport_found_words += 1
+    if passport_found_words >= 6:
+        # Also ensure Passport number REGEX is found
+        return "passport"
+    pan_needed_words = ['income', 'tax', 'department', 'govt', 'india']
+    pan_found_words = 0
+    for pan_word in pan_needed_words:
+        # Enhance it to make it lenient. For example, 'indome' could be found instead of 'income'
+        # OCR makes such kind of mistakes and hence accommodation for such must be made.
+        if pan_word in lowered_text:
+            pan_found_words += 1
+    if pan_found_words >= 3:
+        # TODO: Also make sure that a Regex of form 'AZMPR1111L' is found.
+        # This text is dark and bold and OCR would have definitely picked it up.
+        return "pan"
+    # In Aadhaar Card, Government of India is shaded, hence binarization causes it not to be read properly.
+    aadhaar_needed_words = ['issue', 'date']
+    aadhaar_found_words = 0
+    for aadhaar_word in aadhaar_needed_words:
+        # Enhance it to make it lenient. For example, 'isdue' could be found instead of 'issue'
+        if aadhaar_word in lowered_text:
+            aadhaar_found_words += 1
+    if aadhaar_found_words >= 1:
+        # aadhaar has a regex of form 1234 1234 1234
+        # This finding is a must because it is dark and bold and OCR would have definitely picked it up.
+        return "aadhaar"
+    return None
