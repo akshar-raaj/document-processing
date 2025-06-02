@@ -50,3 +50,27 @@ def set_value(key: str, value: str):
     connection = get_connection()
     value = value.encode('utf-8')
     connection.set(key, value)
+
+
+def set_object(key: str, field: str, value: str):
+    """
+    `key` is the file identifer. In our case a hash created using the file path.
+    `field` is the field name. The possible values are `type`,`raw_image_content` and `processed_image_content`.
+    `value` is the extracted text content after performing the Optical Character Recognition.
+    HMSET <file_hash> raw_image_content <raw_image_content> processed_image_content <processed_image_content>
+    """
+    connection = get_connection()
+    value = value.encode('utf-8')
+    connection.hset(key, field, value)
+
+
+def get_object(key: str, field: str):
+    connection = get_connection()
+    value = connection.hget(key, field)
+    if value is None:
+        return value
+    # Redis stores bytes.
+    # Application encodes the strings to utf-8 before putting in Redis.
+    # Hence decode to utf-8 on read.
+    value = value.decode('utf-8')
+    return value
