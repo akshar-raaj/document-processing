@@ -3,6 +3,10 @@ Redis is being used as the primary database.
 Our use case is extremely simple.
 - We want an identifier for a file.
 - And need to associate the extracted content from this file and map it with the identifier.
+Thus SET operation suffices.
+
+Incrementally, we might want to persist multiple granular information associated with a file.
+HMSET will suffice in such cases.
 
 Hence, a Key-Value data store suffices.
 We do not want to get into the complexity of setting up a Relational Database with and manage the schema nor deal with a Document database which has more administrative overhead.
@@ -55,9 +59,9 @@ def set_value(key: str, value: str):
 def set_object(key: str, field: str, value: str):
     """
     `key` is the file identifer. In our case a hash created using the file path.
-    `field` is the field name. The possible values are `type`,`raw_image_content` and `processed_image_content`.
+    `field` is the field name. The possible values are `type` and `content`.
     `value` is the extracted text content after performing the Optical Character Recognition.
-    HMSET <file_hash> raw_image_content <raw_image_content> processed_image_content <processed_image_content>
+    HMSET <file_hash> type image content <processed_image_content>
     """
     connection = get_connection()
     value = value.encode('utf-8')

@@ -181,7 +181,7 @@ def textract_ocr(attachment: UploadFile):
     path_hash = hashlib.sha256(output_filename.encode('utf-8')).hexdigest()
     set_object(key=path_hash, field="type", value="pdf")
     # Add it to a queue.
-    enqueue_extraction(extraction_function=detect_text_and_set_db, file_path=output_filename, key=path_hash, field="content")
+    enqueue_extraction(extraction_function=detect_text_and_set_db, file_path=output_filename, key=path_hash)
     BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
     link = f"{BASE_URL}/ocr-result/{path_hash}"
     return {"link": link}
