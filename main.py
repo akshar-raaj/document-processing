@@ -1,6 +1,7 @@
 import os
 import logging
 import hashlib
+import json
 from typing import List
 
 from fastapi import FastAPI
@@ -166,11 +167,25 @@ def ocr_result(key: str):
     content = get_object(key, "content")
     if content is None:
         return {"content": content}
+    response_data = {}
+    category = get_object(key, "category")
+    if category is not None:
+        # Only if category is not None, then include it in the response
+        response_data["category"] = category
+        if category == 'passport':
+            passport_data = get_object(key, "passport_data")
+            passport_data = json.loads(passport_data)
+            response_data["passport_data"] = passport_data
+        elif category == 'pan':
+            pan_data = get_object(key, "pan_data")
+            pan_data = json.loads(pan_data)
+            response_data["pan_data"] = pan_data
     # Remove empty lines
     lines = content.splitlines()
     non_blank_lines = [line for line in lines if line.strip() != '']
     content = '\n'.join(non_blank_lines)
-    return {"content": content}
+    response_data["content"] = content
+    return response_data
 
 
 @app.post("/textract-ocr")
