@@ -10,3 +10,4 @@ boto3               # Need to communicate with AWS Textract service
 rq                  # Redis-queue for task/worker setup
 Pillow              # To perform image preprocessing before OCR. Performs grayscale conversion, denoising and binarization
 opencv-contrib-python # To perfomr image preprocessing
+python-Levenshtein  # Fuzzy search during classification and structured data extraction
