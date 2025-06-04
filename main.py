@@ -9,10 +9,9 @@ from fastapi import UploadFile, Form
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from services import identify_file_type, merge_pdfs, save_file, extract_pdf_text_searchable, get_file_size, extract_image_text
+from services import identify_file_type, merge_pdfs, save_file
 from service_wrappers import extract_image_text_and_set_db, extract_pdf_text_and_set_db
 from textract_wrapper import detect_text_and_set_db
-from text_analysis import analyze
 from tasks import enqueue_extraction
 from db import set_object, get_object
 
@@ -38,18 +37,6 @@ def root():
     return "Document Processing"
 
 
-@app.post("/content-type")
-def identify_content_type(attachment: UploadFile):
-    # Identify the file mime type.
-    filename = f"/media/content-type-identification/{attachment.filename}"
-    save_file(attachment.file, filename)
-    # We read through the file in the last step, i.e save_file().
-    # We must seek(0), and go to the beginning before trying to identify the file type.
-    attachment.file.seek(0)
-    file_type = identify_file_type(attachment.file)
-    return {"content-type": file_type.mime_type}
-
-
 @app.post("/pdfs-merge")
 def pdfs_merge(attachments: List[UploadFile]):
     """
@@ -73,48 +60,6 @@ def pdfs_merge(attachments: List[UploadFile]):
     # Validation passed
     merged_filename = merge_pdfs(attachments)
     return {"status": "processed", "filename": merged_filename}
-
-
-@app.post("/extract-pdf-text")
-def extract_text(attachment: UploadFile):
-    """
-    Extracts text from an attachment uploaded through multipart/form-data.
-    """
-    type_details = identify_file_type(attachment.file)
-    if type_details.mime_type != 'application/pdf':
-        raise HTTPException(status_code=400, detail="A non-pdf file found.")
-    attachment_name = attachment.filename
-    output_filename = f"/media/extraction-pdfs/{attachment_name}"
-    save_file(attachment.file, output_filename)
-    attachment.file.seek(0)
-    is_success, content = extract_pdf_text_searchable(attachment.file)
-    if is_success is False:
-        raise HTTPException(status_code=400, detail=content)
-    analysis_result = analyze(content)
-    return {"content": content, "analysis_result": analysis_result}
-
-
-@app.post("/extract-image-text")
-def extract_img_text(attachment: UploadFile):
-    """
-    Perform OCR on the uploaded attachment.
-    Currently works with images having text.
-    Later add support for PDFs and Docx as well.
-    """
-    type_details = identify_file_type(attachment.file)
-    if not type_details.mime_type.startswith('image'):
-        raise HTTPException(status_code=400, detail="A non image file found.")
-    file_size = get_file_size(attachment.file)
-    # 100 MB
-    if file_size > (10 * 1024 * 1024):
-        raise HTTPException(status_code=400, detail="Only supports upto 10MB files.")
-    output_filename = f"/media/extraction-images/{attachment.filename}"
-    attachment.file.seek(0)
-    save_file(attachment.file, output_filename)
-    is_success, content = extract_image_text(output_filename)
-    if is_success is False:
-        raise HTTPException(status_code=400, detail=content)
-    return {"content": content}
 
 
 @app.post("/ocr")
