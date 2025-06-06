@@ -17,6 +17,9 @@ COPY requirements.txt /app
 
 RUN pip install -r requirements.txt
 
+# Install spacy model that can perform NLP tasks like parts of speech tagging, named entity recognition and dependency parsing
+RUN python -m spacy download en_core_web_sm
+
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
