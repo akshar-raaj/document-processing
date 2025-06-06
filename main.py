@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # Allow CORS for your frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://localhost:8001", "http://ocr.petprojects.in"],  # Frontend origin
+    allow_origins=["http://localhost:8000", "http://localhost:8001", "http://ocr.petprojects.in", "http://nlp.petprojects.in"],  # Frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
