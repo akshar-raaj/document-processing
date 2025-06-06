@@ -94,14 +94,14 @@ def converse(text: str, question: str):
     doc = nlp(text)
     lowered_question = question.lower()
     for token in doc:
-        logger.info(f"Token: {token.text}, POS: {token.pos_}")
+        logger.info(f"Token: {token.text}, POS: {token.pos_}, Dep: {token.dep_}")
         if token.pos_ == "PROPN":
             proper_nouns.append(token)
         if token.pos_ == "VERB":
             verbs.append(token)
         if token.dep_ == "nsubj":
             subjects.append(token)
-        if token.dep_ == "pobj":
+        if token.dep_ in ["pobj", "dobj"]:
             objects.append(token)
         if token.pos_ == 'ADP':
             prepositions.append(token)
@@ -114,6 +114,7 @@ def converse(text: str, question: str):
     logger.info(f"Nouns: {proper_nouns}")
     logger.info(f"Verbs: {verbs}")
     logger.info(f"Subjects: {subjects}")
+    logger.info(f"Objects: {objects}")
     logger.info(f"Prepositions: {prepositions}")
     if "who" in lowered_question:
         # The answer should probably be a proper noun.
@@ -123,26 +124,30 @@ def converse(text: str, question: str):
         # Hence dependency parsing can help us get that.
         # We are currently dealing with single sentences.
         # TODO: Modify it to get more context from the question, and then infer the correct subject
-        return subjects[0]
+        return subjects[0].text
     if "where" in lowered_question:
         # It means we want a place as answer
         # The answer should probably be a noun
         # Very likely it is followed by a prepositional phrase.
         # Examples: They went "to" Colombo, kept on "the" table. etc.
         if len(objects) > 0:
-            return objects[0]
+            return objects[0].text
         # Statements like "apaar went to play"
         # Here play is not an object. So use the token appearing right after preposition
         if len(prepositions) > 0:
             prep = prepositions[0]
-            return doc[prep.i + 1]
+            token = doc[prep.i + 1]
+            return token.text
     if "how much" in lowered_question:
         # A quantity has to be returned
         # A quantity would mean a numeric
         if len(numerics) > 0:
-            return numerics[0]
+            return numerics[0].text
     if "when" in lowered_question:
         # A date has to be returned
         if len(dates) > 0:
-            return dates[0]
+            return dates[0].text
+    if "what" in lowered_question:
+        if len(objects) > 0:
+            return objects[0].text
     return None

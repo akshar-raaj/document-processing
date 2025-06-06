@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NLP Question Answering</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow-md sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-purple-600">Playing with Natural Language Processing</h1>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="flex-grow px-4 py-16">
+    <!-- Hero -->
+    <section class="text-center mb-12">
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4">
+        Question Answering
+      </h2>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Get your answers for Who, What, When, Where, How much etc.
+      </p>
+    </section>
+
+    <!-- Form -->
+    <section class="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-lg mb-8">
+      <form id="qaForm" class="space-y-6">
+        <div>
+          <label class="block text-gray-700 font-medium mb-1" for="textInput">Text</label>
+          <input type="text" id="textInput" name="text" placeholder="Enter your sentence"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1" for="questionInput">Question</label>
+          <input type="text" id="questionInput" name="question" placeholder="Enter your question"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required />
+        </div>
+        <button type="submit"
+                class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition">
+          Submit
+        </button>
+      </form>
+    </section>
+
+    <!-- Answer Section -->
+    <section id="answerSection" class="max-w-xl mx-auto hidden">
+      <div class="bg-white p-6 rounded-lg shadow-lg border-l-8 border-purple-500">
+        <h4 class="text-lg font-semibold text-purple-700 mb-2">Answer:</h4>
+        <p id="answerText" class="text-gray-800 text-xl font-medium"></p>
+      </div>
+    </section>
+
+    <!-- Examples Section -->
+    <section class="max-w-3xl mx-auto mt-20">
+      <h3 class="text-2xl font-bold text-gray-800 mb-6">Examples</h3>
+
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <p class="mb-2"><strong class="text-purple-600">Text:</strong> Apaar went to school.</p>
+        <p class="mb-1"><strong class="text-gray-700">Question:</strong> Who went to school?</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <p class="mb-2"><strong class="text-purple-600">Text:</strong> The book was read by Akshar.</p>
+        <p><strong class="text-gray-700">Other question:</strong> What was read?</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <p class="mb-2"><strong class="text-purple-600">Text:</strong> My birthday is on 22nd January.</p>
+        <p class="mb-1"><strong class="text-gray-700">Question:</strong> When is my birthday?</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <p class="mb-2"><strong class="text-purple-600">Text:</strong> We visited Colombo for a vacation.</p>
+        <p class="mb-1"><strong class="text-gray-700">Question:</strong> Where did you go?</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <p class="mb-2"><strong class="text-purple-600">Text:</strong> The eggs cost Rs 20.</p>
+        <p class="mb-1"><strong class="text-gray-700">Question:</strong> How much did it cost?</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white text-center text-gray-500 text-sm py-6 shadow-inner mt-12">
+    &copy; Akshar Raaj
+  </footer>
+
+  <!-- JS -->
+  <script>
+    const form = document.getElementById('qaForm');
+    const answerSection = document.getElementById('answerSection');
+    const answerText = document.getElementById('answerText');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const text = document.getElementById('textInput').value.trim();
+      const question = document.getElementById('questionInput').value.trim();
+
+      try {
+        const response = await fetch('http://localhost:8000/converse', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text, question })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch answer.');
+        }
+
+        const data = await response.json();
+        answerText.textContent = data.answer || 'No answer returned.';
+        answerSection.classList.remove('hidden');
+      } catch (error) {
+        answerText.textContent = 'An error occurred. Please try again.';
+        answerSection.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

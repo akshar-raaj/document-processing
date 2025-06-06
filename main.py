@@ -9,9 +9,11 @@ from fastapi import UploadFile, Form
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from models import ConverseModel
 from services import identify_file_type, merge_pdfs, save_file
 from service_wrappers import extract_image_text_and_set_db, extract_pdf_text_and_set_db
 from textract_wrapper import detect_text_and_set_db
+from language_processing import converse
 from tasks import enqueue_extraction
 from db import set_object, get_object
 
@@ -148,3 +150,18 @@ def textract_ocr(attachment: UploadFile):
     BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
     link = f"{BASE_URL}/ocr-result/{path_hash}"
     return {"link": link}
+
+
+@app.post("/converse")
+def conversation(body: ConverseModel):
+    """
+    Performs things like:
+    - Tokenization
+    - Parts of Speech tagging
+    - Named Entity Recognition
+    """
+    answer = converse(body.text, body.question)
+    logger.info(f"Answer: {answer}")
+    if answer is None:
+        answer = "Failed to parse"
+    return {"answer": answer}
