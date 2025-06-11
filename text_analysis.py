@@ -197,14 +197,60 @@ def classify_pan(text: str):
 def analyze_passport(text: str):
     # Word boundary on both sides.
     # An upper case letter followed by exactly 7 digits
+    logger.info("Analyzing passport")
+    FIRST_NAME = "given name(s)"
+    DOB = "date of birth"
+    LAST_NAME = "surname"
+    first_name = None
+    last_name = None
+    dob = None
     matches = re.findall(r'\b[A-Z]\d{7}\b', text)
     passport_number = None
     if len(matches) > 0:
         passport_number = matches[0]
+    try:
+        # Even if other fields break, atleast extract the passport number
+        lines = text.splitlines()
+        non_blank_lines = [line for line in lines if line.strip() != '']
+        text = '\n'.join(non_blank_lines)
+        text = text.lower()
+        match_found, match_str, distance = fuzzy_substring_match(text, FIRST_NAME, max_distance=3)
+        if match_found:
+            index = text.index(match_str)
+            new_line_index = text.find('\n', index)
+            content_after_new_line = text[new_line_index+1:]
+            name_and_others = content_after_new_line.split('\n')
+            if len(name_and_others) > 0:
+                first_name = name_and_others[0]
+        match_found, match_str, distance = fuzzy_substring_match(text, LAST_NAME, max_distance=2)
+        if match_found:
+            index = text.index(match_str)
+            new_line_index = text.find('\n', index)
+            content_after_new_line = text[new_line_index+1:]
+            name_and_others = content_after_new_line.split('\n')
+            if len(name_and_others) > 0:
+                last_name = name_and_others[0]
+        match_found, match_str, distance = fuzzy_substring_match(text, DOB, max_distance=2)
+        if match_found:
+            index = text.index(match_str)
+            new_line_index = text.find('\n', index)
+            content_after_new_line = text[new_line_index+1:]
+            name_and_others = content_after_new_line.split('\n')
+            if len(name_and_others) > 0:
+                dob = name_and_others[0]
+    except Exception as e:
+        logger.error(e)
+        pass
     data = {
     }
     if passport_number is not None:
-        data['passport_number'] = passport_number
+        data['Passport Number'] = passport_number
+    if first_name is not None:
+        data['First Name'] = first_name
+    if last_name is not None:
+        data['Last Name'] = last_name
+    if dob is not None:
+        data['Date Of Birth'] = dob
     return data
 
 
