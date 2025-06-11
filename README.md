@@ -9,8 +9,9 @@
 
 ## What
 
-This repository powers http://ocr.petprojects.in and http://ocr-api.petprojects.in.
-It also supports http://nlp.petprojects.in.
+This repository powers the following:
+- [http://ocr.petprojects.in](http://ocr.petprojects.in)
+- [http://nlp.petprojects.in](http://nlp.petprojects.in)
 
 This project performs the following broad functionalities:
 - Text Detection
